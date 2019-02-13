@@ -1,0 +1,93 @@
+- Create a new linux VM with vagrant:
+
+vagrant init ubuntu/xenial64
+vagrant up
+
+If you want to give a name to the vagrant machine use config.vm.hostname argument inside the vagrant file)
+
+If you want to set an IP to the vagrant machine set config.vm.network. ie:
+
+	config.vm.network "private_network", ip: "192.168.10.3"
+
+
+--Install kops
+
+curl -LO https://github.com/kubernetes/kops/releases/download/$(curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4)/kops-linux-amd64
+
+chmod +x kops-linux-amd64
+
+sudo mv kops-linux-amd64 /usr/local/bin/kops
+
+--Install phyton pip (required to install aws command line utility, awscli)
+
+sudo apt-get install python-pip
+
+--Install aws command line utility
+
+sudo pip install awscli
+
+if the above command fails (possibly due to installed locale) run the command below to fix it, and then rerun pip install awscli:
+
+export LS_ALL=C //this is required if you get an error during pip install  awscli!!!
+
+-- create a user with programatic access on AWS over IAM assign administrative access policy to it
+
+-- configure aws cli with that user:
+
+sudo aws configure (this will ask access key and secret access key for that user)
+
+aws configure command will also ask for the region which should not be blank for successfully executing the 'kops' commands.
+
+--install kubectl
+
+(From kubectl install page)
+
+sudo apt-get update && sudo apt-get install -y apt-transport-https
+curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update
+sudo apt-get install -y kubectl
+
+--create ssh key (kops command is using the key generated here)
+
+ssh-keygen -f .ssh/id_rsa
+
+Below is the public key generated that will be loaded on instances, we will login with private key
+.ssh/id_rsa.public
+
+--Now use the kops command to create the cluster on AWS!
+
+--A DNS Zone must be added on AWS Route53 and configured with an actual domain:
+
+(Here I bough a 9$ domain serdariks.co.uk for this one)
+
+- An S3 bucket should be created on AWS
+
+--list all buckets:
+aws s3 ls
+
+--list availability zones under the region:
+aws ec2 describe-availability-zones
+
+--Below is the actual command for creation of the kubernetes cluster on AWS, with one master and 2 nodes:
+
+Here we are using the bucket that we created before (s3://kops123-serdariks)
+With the --zones argument we are giving a 'zone' not a 'region' eu-west-2a is a zone under eu-west-2 region
+
+sudo kops create cluster --name=serdariks.co.uk --state=s3://kops123-serdariks --zones=eu-west-2a --node-count=2 --node-size=t2.micro --master-size=t2.micro --dns-zone=serdariks.co.uk
+
+---To connect to master kubernetes node:
+
+ssh -i ~/.ssh/id_rsa admin@api.serdariks.co.uk
+
+-- to verify kubernetes nodes:
+
+sudo kubectl get nodes
+
+-- to start the cluster(ec2 instances will start with this)
+
+kops update cluster serdariks.co.uk --yes --state=s3://kops123-serdariks
+
+-- to delete the cluster and terminate all instances (it will cost money if you exceed 720 hours a month!)
+
+sudo kops delete cluster serdariks.co.uk --state=s3://kops123-serdariks --yes
