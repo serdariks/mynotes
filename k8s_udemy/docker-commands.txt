@@ -1,0 +1,81 @@
+- For not typing sudo everytime while issuing docker commands:
+sudo usermod -G docker vagrant (vagrant is the user for the vagrant box)
+
+--push an image to docker hub
+
+docker login
+docker tag image-id your-login/docker-demo
+docker push your-login/docker-demo
+
+--projects/kubernetes-course/first-app
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nodehelloworld.example.com
+  labels:
+    app: helloworld
+spec:
+  containers:
+  - name: k8s-demo
+    image: wardviaene/k8s-demo
+    ports:
+    - name: nodejs-port
+      containerPort: 3000
+
+
+kubectl create -f helloworld.yml
+kubectl get pods
+kubectl describe pod nodehelloworld.example.com
+
+- to test this:
+
+Way1- port forwarding:
+
+kubectl port-forward nodehelloworld.example.com 8081:3000
+
+Way2- expose over NodePort service:
+
+kubectl expose pod nodehelloworld.example.com --type=NodePort --name helloworld-service
+
+below will give the node service url to connect
+minikube service helloworld-service --url
+http://192.168.99.100:30335
+
+--to attach runnning pod:
+kubectl attach nodehelloworld.example.com
+
+--to execute command inside running pod:
+
+kubectl exec nodehelloworld.example.com -- ls /app
+
+-- To connect from another pod within the same cluster over an endpoint(one way of doing this, not the best way!):
+
+kubectl describe service helloworld-service
+
+Name:                     helloworld-service
+Namespace:                default
+Labels:                   app=helloworld
+Annotations:              <none>
+Selector:                 app=helloworld
+Type:                     NodePort
+IP:                       10.96.221.234
+Port:                     <unset>  3000/TCP
+TargetPort:               3000/TCP
+NodePort:                 <unset>  30335/TCP
+Endpoints:                172.17.0.4:3000
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Events:                   <none>
+
+-We are launching another pod (busybox) manually to test the endpoint shown above:
+
+--launching the busybox pod manually:
+
+kubectl run -i --tty busybox --image=busybox --restart=Never
+
+--then telnet to the endpoint shown and issue a /GET command to receive a response
+
+telnet 172.17.0.4 3000
+GET /
+(this returns an HTTP response showing hello world message)

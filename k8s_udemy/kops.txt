@@ -91,3 +91,18 @@ kops update cluster serdariks.co.uk --yes --state=s3://kops123-serdariks
 -- to delete the cluster and terminate all instances (it will cost money if you exceed 720 hours a month!)
 
 sudo kops delete cluster serdariks.co.uk --state=s3://kops123-serdariks --yes
+
+--test the cluster with sample
+
+kubectl run hello-minikube --image=k8s.gcr.io/echoserver:1.4 --port=8080
+kubectl expose deployment hello-minikube --type=NodePort
+
+--find the port exposed (31988 in this sample)
+
+sudo kubectl get services
+
+NAME             TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+hello-minikube   NodePort    100.71.24.183   <none>        8080:31988/TCP   40s
+kubernetes       ClusterIP   100.64.0.1      <none>        443/TCP          51m
+
+--for the node instances add port 31988 to their common security group defined on AWS! Both nodes use the same port. and both nodes use a common aws security group. add the common port there as an inbound custom tcp rule.
