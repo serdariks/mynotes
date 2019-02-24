@@ -1,0 +1,4 @@
+//private key file should be secured like this or it won't accept!
+chmod 0400 myprivatekey.pem
+ssh -i myprivatekey.pem ec2-user@my-instance-ip
+
