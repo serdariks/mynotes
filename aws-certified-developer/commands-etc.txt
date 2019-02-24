@@ -2,3 +2,28 @@
 chmod 0400 myprivatekey.pem
 ssh -i myprivatekey.pem ec2-user@my-instance-ip
 
+--install apache
+sudo yum update -y
+yum install -y httpd.x86_64
+--start apache service
+systemctl start httpd.service
+--auto start apache service on start
+systemctl enable httpd.service
+--test server locally
+curl localhost:80
+--to test from www
+	add security group for port 80
+--test page
+echo "Hello world" > /var/www/html/index.html
+
+--execute script on instance initialize (user data section on instance definition)
+
+--contents of the script
+#!/bin/bash
+sudo su --not required, it already runs with root access
+sudo yum update -y
+yum install -y httpd.x86_64
+systemctl start httpd.service
+systemctl enable httpd.service
+echo "Hello world from $(hostname -f)" > /var/www/html/index.html
+--end of contents of the script
