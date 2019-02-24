@@ -27,3 +27,10 @@ systemctl start httpd.service
 systemctl enable httpd.service
 echo "Hello world from $(hostname -f)" > /var/www/html/index.html
 --end of contents of the script
+
+--custom AMIs are built only for a specific region!
+--burstable instances (T2)
+cpu credits gained as your instance performs normal, if it spikes it consumes these gained credits, and if all is spent starts to performs bad. No money paid for this feature.
+--T2 unlimited
+unlimited cpu guaranteed if there's a cpu spike but it costs money! be carefull if you are not monitoring.
+
